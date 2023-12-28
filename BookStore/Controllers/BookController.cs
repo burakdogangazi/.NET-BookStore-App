@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BookStore.BookOperations.CreateBook;
+using BookStore.BookOperations.DeleteBook;
+using BookStore.BookOperations.GetBookDetail;
+using BookStore.BookOperations.GetBooks;
 using BookStore.DbOperations;
 using Microsoft.AspNetCore.Mvc;
+using BookStore.BookOperations.UpdateBook;
 
 namespace BookStore.Controllers
 {
@@ -10,34 +15,6 @@ namespace BookStore.Controllers
     [Route("[controller]s")]
     public class BookController : ControllerBase
     {
-        /*private static List<Book> BookList = new List<Book>()
-        {
-            new Book
-            {
-                Id = 1,
-                Title = "Lean Startup",
-                GenreId = 1,
-                PageCount = 300,
-                PublishDate = new DateTime(2002, 06, 12)
-            },
-            new Book
-            {
-                Id = 2,
-                Title = "Herland",
-                GenreId = 2,
-                PageCount = 400,
-                PublishDate = new DateTime(2004, 06, 12)
-            },
-            new Book
-            {
-                Id = 3,
-                Title = "Dune",
-                GenreId = 3,
-                PageCount = 600,
-                PublishDate = new DateTime(2009, 06, 12)
-            }
-        };*/
-
         private readonly BookStoreDbContext _context;
         //just can be setted on ctor with readonly, cannot set at another place
 
@@ -47,17 +24,30 @@ namespace BookStore.Controllers
         }
 
         [HttpGet]
-        public List<Book> GetBooks()
+        public IActionResult GetBooks()
         {
-            var bookList = _context.Books.OrderBy(x => x.Id).ToList();
-            return bookList;
+            GetBooksQuery query = new GetBooksQuery(_context);
+            var result = query.Handle();
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public Book GetById(int id)
+        public IActionResult GetById(int id)
         {
-            var book = _context.Books.Where(book => book.Id == id).SingleOrDefault();
-            return book;
+            BookDetailViewModel result;
+            GetBookDetailQuery query = new GetBookDetailQuery(_context);
+
+            try
+            {
+                query.BookId = id;
+                result = query.Handle();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return Ok(result);
         }
 
         /* [HttpGet]
@@ -68,50 +58,55 @@ namespace BookStore.Controllers
          }*/
 
         [HttpPost]
-        public IActionResult AddBook([FromBody] Book newBook)
+        public IActionResult AddBook([FromBody] CreateBookCommand.CreateBookModel newBook)
         {
-            var book = _context.Books.SingleOrDefault(x => x.Title == newBook.Title);
-            if (book is not null)
+            CreateBookCommand command = new CreateBookCommand(_context);
+            try
             {
-                return BadRequest();
+                command.Model = newBook;
+                command.Handle();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
 
-            _context.Books.Add(newBook);
-            _context.SaveChanges();
             return Ok();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateBook(int id, [FromBody] Book updatedBook)
+        public IActionResult UpdateBook(int id, [FromBody] UpdateBookCommand.UpdateBookModel updatedBook)
         {
-            var book = _context.Books.SingleOrDefault(x => x.Id == id);
+            UpdateBookCommand command = new UpdateBookCommand(_context);
 
-            if (book is null)
+            try
             {
-                return BadRequest();
+                command.BookId = id;
+                command.Model = updatedBook;
+                command.Handle();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
 
-            book.GenreId = updatedBook.GenreId != default ? updatedBook.GenreId : book.GenreId;
-            book.PageCount = updatedBook.PageCount != default ? updatedBook.PageCount : book.PageCount;
-            book.PublishDate = updatedBook.PublishDate != default ? updatedBook.PublishDate : book.PublishDate;
-            book.Title = updatedBook.Title != default ? updatedBook.Title : book.Title;
-
-            _context.SaveChanges();
             return Ok();
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteBook(int id)
         {
-            var book = _context.Books.SingleOrDefault(book => book.Id == id);
-
-            if (book is null)
+            DeleteBookCommand command = new DeleteBookCommand(_context);
+            try
             {
-                return BadRequest();
+                command.BookId = id;
+                command.Handle();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
 
-            _context.Books.Remove(book);
-            _context.SaveChanges();
             return Ok();
         }
     }
