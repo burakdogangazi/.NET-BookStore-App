@@ -9,6 +9,8 @@ using BookStore.BookOperations.GetBooks;
 using BookStore.DbOperations;
 using Microsoft.AspNetCore.Mvc;
 using BookStore.BookOperations.UpdateBook;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace BookStore.Controllers
 {
@@ -17,9 +19,10 @@ namespace BookStore.Controllers
     public class BookController : ControllerBase
     {
         private readonly BookStoreDbContext _context;
+
         //just can be setted on ctor with readonly, cannot set at another place
         private readonly IMapper _mapper;
-        
+
         public BookController(BookStoreDbContext context, IMapper mapper)
         {
             _context = context;
@@ -29,7 +32,7 @@ namespace BookStore.Controllers
         [HttpGet]
         public IActionResult GetBooks()
         {
-            GetBooksQuery query = new GetBooksQuery(_context,_mapper);
+            GetBooksQuery query = new GetBooksQuery(_context, _mapper);
             var result = query.Handle();
             return Ok(result);
         }
@@ -38,7 +41,7 @@ namespace BookStore.Controllers
         public IActionResult GetById(int id)
         {
             BookDetailViewModel result;
-            GetBookDetailQuery query = new GetBookDetailQuery(_context,_mapper);
+            GetBookDetailQuery query = new GetBookDetailQuery(_context, _mapper);
 
             try
             {
@@ -63,10 +66,25 @@ namespace BookStore.Controllers
         [HttpPost]
         public IActionResult AddBook([FromBody] CreateBookCommand.CreateBookModel newBook)
         {
-            CreateBookCommand command = new CreateBookCommand(_context,_mapper);
+            CreateBookCommand command = new CreateBookCommand(_context, _mapper);
             try
             {
                 command.Model = newBook;
+                CreateBookCommandValidator createBookCommandValidator = new CreateBookCommandValidator();
+                /*ValidationResult result = createBookCommandValidator.Validate(command);
+                if (!result.IsValid)
+                {
+                    foreach (var item in result.Errors)
+                    {
+                        Console.WriteLine("Props: " + item.PropertyName + "- Error Message: " + item.ErrorMessage);
+                    }
+                }
+                else
+                {
+                    command.Handle();
+                }*/
+                
+                createBookCommandValidator.ValidateAndThrow(command);
                 command.Handle();
             }
             catch (Exception e)
@@ -103,6 +121,8 @@ namespace BookStore.Controllers
             try
             {
                 command.BookId = id;
+                DeleteBookCommandValidator deleteBookCommandValidator = new DeleteBookCommandValidator();
+                deleteBookCommandValidator.ValidateAndThrow(command);
                 command.Handle();
             }
             catch (Exception e)
