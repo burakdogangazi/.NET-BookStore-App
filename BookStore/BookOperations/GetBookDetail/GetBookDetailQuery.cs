@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AutoMapper;
 using BookStore.Common;
 using BookStore.DbOperations;
 
@@ -11,9 +12,12 @@ namespace BookStore.BookOperations.GetBookDetail
 
         public int BookId { get; set; }
 
-        public GetBookDetailQuery(BookStoreDbContext dbContext)
+        private readonly IMapper _mapper;
+
+        public GetBookDetailQuery(BookStoreDbContext dbContext,IMapper mapper)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
         }
 
         public BookDetailViewModel Handle()
@@ -25,12 +29,11 @@ namespace BookStore.BookOperations.GetBookDetail
                 throw new InvalidOperationException("The book is not exist");
             }
 
-            BookDetailViewModel vm = new BookDetailViewModel();
-
-            vm.Title = book.Title;
+            BookDetailViewModel vm = _mapper.Map<BookDetailViewModel>(book); //new BookDetailViewModel();
+            /*vm.Title = book.Title;
             vm.PageCount = book.PageCount;
             vm.PublishDate = book.PublishDate.Date.ToString("dd/MM/yyyy");
-            vm.Genre = ((GenreEnum)book.GenreId).ToString();
+            vm.Genre = ((GenreEnum)book.GenreId).ToString();*/
 
             return vm;
         }
