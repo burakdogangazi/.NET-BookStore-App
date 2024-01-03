@@ -46,6 +46,8 @@ namespace BookStore.Controllers
             try
             {
                 query.BookId = id;
+                GetBookDetailQueryValidator getBookDetailQueryValidator = new GetBookDetailQueryValidator();
+                getBookDetailQueryValidator.ValidateAndThrow(query);
                 result = query.Handle();
             }
             catch (Exception e)
@@ -104,6 +106,8 @@ namespace BookStore.Controllers
             {
                 command.BookId = id;
                 command.Model = updatedBook;
+                UpdateBookCommandValidator updateBookCommandValidator = new UpdateBookCommandValidator();
+                updateBookCommandValidator.ValidateAndThrow(command);
                 command.Handle();
             }
             catch (Exception e)
