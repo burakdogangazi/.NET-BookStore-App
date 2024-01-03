@@ -43,17 +43,11 @@ namespace BookStore.Controllers
             BookDetailViewModel result;
             GetBookDetailQuery query = new GetBookDetailQuery(_context, _mapper);
 
-            try
-            {
-                query.BookId = id;
-                GetBookDetailQueryValidator getBookDetailQueryValidator = new GetBookDetailQueryValidator();
-                getBookDetailQueryValidator.ValidateAndThrow(query);
-                result = query.Handle();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            query.BookId = id;
+            GetBookDetailQueryValidator getBookDetailQueryValidator = new GetBookDetailQueryValidator();
+            getBookDetailQueryValidator.ValidateAndThrow(query);
+            result = query.Handle();
+
 
             return Ok(result);
         }
@@ -69,30 +63,24 @@ namespace BookStore.Controllers
         public IActionResult AddBook([FromBody] CreateBookCommand.CreateBookModel newBook)
         {
             CreateBookCommand command = new CreateBookCommand(_context, _mapper);
-            try
+            command.Model = newBook;
+            CreateBookCommandValidator createBookCommandValidator = new CreateBookCommandValidator();
+            /*ValidationResult result = createBookCommandValidator.Validate(command);
+            if (!result.IsValid)
             {
-                command.Model = newBook;
-                CreateBookCommandValidator createBookCommandValidator = new CreateBookCommandValidator();
-                /*ValidationResult result = createBookCommandValidator.Validate(command);
-                if (!result.IsValid)
+                foreach (var item in result.Errors)
                 {
-                    foreach (var item in result.Errors)
-                    {
-                        Console.WriteLine("Props: " + item.PropertyName + "- Error Message: " + item.ErrorMessage);
-                    }
+                    Console.WriteLine("Props: " + item.PropertyName + "- Error Message: " + item.ErrorMessage);
                 }
-                else
-                {
-                    command.Handle();
-                }*/
-                
-                createBookCommandValidator.ValidateAndThrow(command);
-                command.Handle();
             }
-            catch (Exception e)
+            else
             {
-                return BadRequest(e.Message);
-            }
+                command.Handle();
+            }*/
+
+            createBookCommandValidator.ValidateAndThrow(command);
+            command.Handle();
+
 
             return Ok();
         }
@@ -102,18 +90,11 @@ namespace BookStore.Controllers
         {
             UpdateBookCommand command = new UpdateBookCommand(_context);
 
-            try
-            {
-                command.BookId = id;
-                command.Model = updatedBook;
-                UpdateBookCommandValidator updateBookCommandValidator = new UpdateBookCommandValidator();
-                updateBookCommandValidator.ValidateAndThrow(command);
-                command.Handle();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            command.BookId = id;
+            command.Model = updatedBook;
+            UpdateBookCommandValidator updateBookCommandValidator = new UpdateBookCommandValidator();
+            updateBookCommandValidator.ValidateAndThrow(command);
+            command.Handle();
 
             return Ok();
         }
@@ -122,17 +103,12 @@ namespace BookStore.Controllers
         public IActionResult DeleteBook(int id)
         {
             DeleteBookCommand command = new DeleteBookCommand(_context);
-            try
-            {
-                command.BookId = id;
-                DeleteBookCommandValidator deleteBookCommandValidator = new DeleteBookCommandValidator();
-                deleteBookCommandValidator.ValidateAndThrow(command);
-                command.Handle();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+
+            command.BookId = id;
+            DeleteBookCommandValidator deleteBookCommandValidator = new DeleteBookCommandValidator();
+            deleteBookCommandValidator.ValidateAndThrow(command);
+            command.Handle();
+
 
             return Ok();
         }
